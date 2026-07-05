@@ -4,10 +4,10 @@
  * Generates static ad images using Gemini 3.1 Flash (image editing) via REST API.
  *
  * Usage:
- *   node generate_ads_gemini.mjs --brand-dir brands/{name}                              # Full run (all templates, 4 imgs, both ratios)
- *   node generate_ads_gemini.mjs --brand-dir brands/{name} --templates 1,7,13 --num-images 1  # Cheap test
+ *   node generate_ads_gemini.mjs --brand-dir brands/{name}                              # Default: all templates, 1 img each, 1x1 only
+ *   node generate_ads_gemini.mjs --brand-dir brands/{name} --templates 1,7,13           # Cheap test (3 imgs)
+ *   node generate_ads_gemini.mjs --brand-dir brands/{name} --num-images 4 --ratios 1x1,9x16  # Max: 4 imgs, both ratios
  *   node generate_ads_gemini.mjs --brand-dir brands/{name} --max-concurrent 5            # Control parallelism
- *   node generate_ads_gemini.mjs --brand-dir brands/{name} --ratios 1x1                  # Single ratio only
  */
 
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "fs";
@@ -25,7 +25,7 @@ const __dirname = dirname(__filename);
 const GEMINI_MODEL = "gemini-2.5-flash-image";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-const DEFAULT_NUM_IMAGES = 4;
+const DEFAULT_NUM_IMAGES = 1;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 10000;
 const REQUEST_DELAY_MS = 2000; // Delay between requests to avoid rate limits
@@ -601,7 +601,7 @@ async function main() {
       templates: { type: "string", default: "" },
       "num-images": { type: "string", default: String(DEFAULT_NUM_IMAGES) },
       "max-concurrent": { type: "string", default: "2" },
-      ratios: { type: "string", default: "1x1,9x16" },
+      ratios: { type: "string", default: "1x1" },
     },
   });
 

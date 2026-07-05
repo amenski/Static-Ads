@@ -29,15 +29,20 @@ Automated static ad generator: Claude Code + Google Gemini (primary) / FAL.ai Na
 
 ```bash
 # === PRIMARY: Google Gemini ===
+# Defaults are now cost-lean: 1 image per template, 1x1 ratio only.
+# A bare run = 50 templates x 1 x 1 = 50 images (was 400).
 
-# Full run (all 50 templates, 4 images each, both aspect ratios)
+# Default run (all 50 templates, 1 image each, 1x1 only)
 node skills/references/generate_ads_gemini.mjs --brand-dir brands/{name}
 
-# Cheap test run
-node skills/references/generate_ads_gemini.mjs --brand-dir brands/{name} --templates 1,7,13 --num-images 1 --ratios 1x1
+# Recommended ~30-image run (curated strongest templates, 1x1)
+node skills/references/generate_ads_gemini.mjs --brand-dir brands/{name} --templates 1,2,3,4,5,6,7,8,9,11,12,13,15,16,20,21,22,23,29,32,33,38,39,40,41,44,46,47,48,50
 
-# Specific templates
-node skills/references/generate_ads_gemini.mjs --brand-dir brands/{name} --templates 1,4,7,9,13 --num-images 4
+# Cheap test run (3 images)
+node skills/references/generate_ads_gemini.mjs --brand-dir brands/{name} --templates 1,7,13
+
+# Max quality run (4 images each, both ratios = 400)
+node skills/references/generate_ads_gemini.mjs --brand-dir brands/{name} --num-images 4 --ratios 1x1,9x16
 
 # Control parallelism (default: 2, recommended: 5)
 node skills/references/generate_ads_gemini.mjs --brand-dir brands/{name} --max-concurrent 5

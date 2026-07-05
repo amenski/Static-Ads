@@ -226,9 +226,13 @@ Save output as: `brands/{brand-name}/brand-dna.md`
 4. Based on the user's answer, note which images map to which prompts — this will populate the `reference_images` array in each prompt entry in `prompts.json`
 
 **Reference image rules for prompts.json:**
-- If the user wants ALL images sent with every prompt: leave `reference_images` as an empty array `[]` (the script sends all product images by default when the array is empty)
-- If the user wants SPECIFIC images per prompt: populate `reference_images` with an array of filenames (just the filename, not full path) — e.g., `"reference_images": ["Tirzepatide-Vial.png", "product-front.png"]`
-- The filenames must match exactly what's in `product-images/`
+- **Default to per-prompt scoping, NOT empty `[]`.** Reference images are billed as input tokens on *every* API call (Gemini bills each attached image). Sending all 8–9 product images with all 50 prompts is the single biggest cost driver — it roughly triples the per-image cost (~$0.11/img vs ~$0.04/img). Leaving `reference_images: []` (= send everything) is the expensive path.
+- **Assign each prompt only the image(s) it actually displays.** If a prompt's hero shot is the home/dashboard screen, send only the logo/icon + that one screen — not the labs, supplements, learn, etc. screens it never shows. A small logo/icon file is nearly free, so keep it on prompts that render the brand mark; the large product/screenshot files are what cost — minimize those per prompt.
+  - Single-screen prompt → `[icon, the-one-screen.png]`
+  - Multi-screen prompt (e.g. "three phones fanned out") → `[icon, screen-a.png, screen-b.png, screen-c.png]`
+  - Tone-only prompt ("do NOT render the app UI / product", "color reference only") → `[icon]` alone (or `[]` if even the icon isn't needed)
+- If the user explicitly wants ALL images on every prompt: leave `reference_images` as `[]` (the script sends all by default when empty) — but flag the added cost first.
+- Populate `reference_images` with filenames only (not full paths) — e.g., `"reference_images": ["Tirzepatide-Vial.png", "product-front.png"]`. The filenames must match exactly what's in `product-images/`.
 
 **Do NOT proceed to Step 4 until the user confirms their reference image selection.**
 

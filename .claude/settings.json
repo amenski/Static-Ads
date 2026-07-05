@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/amanuel/Documents/prg_proj/marketing/debtwise/30-day-v2/**)",
+      "Bash(node composite-posts.mjs 1)",
+      "Bash(awk '{print $9,$5}')",
+      "Bash(node generate-backgrounds.mjs 01-kitchen-night-phone 02-laptop-coffee-desk 03-couch-phone-hands 04-journal-coffee-table 05-bills-floor-overwhelmed 06-bed-laptop-night 07-cafe-laptop 09-walking-phone-street 10-desk-evening-lamp 11-cooking-casual 12-couple-table-finances 13-relief-desk-smile 14-phone-coffee-flatlay 15-window-thinking)",
+      "Bash(node generate-backgrounds.mjs 14-phone-coffee-flatlay)",
+      "Bash(node composite-posts.mjs)",
+      "Bash(magick montage *)",
+      "Read(//tmp/**)",
+      "Bash(awk '{print $5}')",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "Bash(cd /Users/amanuel/Documents/prg_proj/pcos_app && ls -la && echo \"---PUBSPEC---\" && find . -maxdepth 2 -name \"pubspec.yaml\" -o -maxdepth 2 -name \"package.json\" 2>/dev/null | head)",
+      "Read(//Users/amanuel/Documents/prg_proj/pcos_app/**)",
+      "Bash(grep -i \"price\\\\|9.99\\\\|4.99\\\\|29.99\\\\|19.99\\\\|39.99\\\\|usd\\\\|\\\\\\\\\\\\$\")"
+    ],
+    "additionalDirectories": [
+      "/Users/amanuel/Documents/prg_proj/Static-Ads/posts",
+      "/Users/amanuel/Documents/prg_proj/marketing/debtwise/30-day-v2"
+    ]
+  }
+}
