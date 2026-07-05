@@ -22,7 +22,7 @@ import { parseArgs } from "util";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const GEMINI_MODEL = "gemini-3.1-flash-image-preview";
+const GEMINI_MODEL = "gemini-2.5-flash-image";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const DEFAULT_NUM_IMAGES = 4;
