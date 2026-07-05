@@ -10,7 +10,7 @@
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from 'fs';
 import { join, dirname, basename } from 'path';
 import { parseArgs } from 'util';
-import XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 const { values } = parseArgs({
   options: { 'output-dir': { type: 'string' } },
@@ -150,12 +150,12 @@ for (const [tplKey, ratioMap] of Object.entries(byTemplate)) {
 }
 
 // ── Write upload-2.xlsx ──────────────────────────────────────────────────────
-const wsData = [newHeader, ...outputRows.map(row => row.map(sanitize))];
-const ws = XLSX.utils.aoa_to_sheet(wsData);
-const wb = XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb, ws, 'Ads');
+const wb = new ExcelJS.Workbook();
+const ws = wb.addWorksheet('Ads');
+ws.addRow(newHeader);
+for (const row of outputRows) ws.addRow(row.map(sanitize));
 const outXLSXPath = join(outputDir, 'upload-2.xlsx');
-XLSX.writeFile(wb, outXLSXPath);
+await wb.xlsx.writeFile(outXLSXPath);
 console.log(`✓ upload-2.xlsx written — ${outputRows.length} rows`);
 
 // ── Copy selected images to Ad-uploads/ ──────────────────────────────────────

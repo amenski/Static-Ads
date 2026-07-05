@@ -125,7 +125,7 @@ Also: `rebuild-upload-csv.mjs` expects the old dual-row CSV format — do NOT us
 
 - Node.js 18+ required (uses built-in `fetch`, `parseArgs`)
 - ~~**Python is NOT installed** — always use Node.js for scripts~~ — modify based on your environment
-- ~~No npm packages — script is zero-dependency~~ — one dependency: `xlsx` (install with `npm install`)
+- ~~No npm packages — script is zero-dependency~~ — one dependency: `exceljs` (install with `npm install`)
 - ~~Windows 11, running inside VS Code with Claude Code~~ — modify based on your environment
 
 ## Brand Research Rules

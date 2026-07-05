@@ -13,7 +13,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join, basename } from "path";
-import XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { parseArgs } from "util";
 import { exec } from "child_process";
 
@@ -121,14 +121,27 @@ console.log(`Reading ${basename(csvPath)} (${csvType} format)...`);
 
 let rawAds;
 if (csvPath.endsWith(".xlsx")) {
-  const wb = XLSX.readFile(csvPath);
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
-  rawAds = rows.map((row) => {
-    const obj = {};
-    for (const [k, v] of Object.entries(row)) obj[k.trim()] = String(v).trim();
-    return obj;
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.readFile(csvPath);
+  const ws = wb.worksheets[0];
+  const headers = [];
+  ws.getRow(1).eachCell({ includeEmpty: true }, (cell, colNumber) => {
+    headers[colNumber - 1] = String(cell.text ?? "").trim();
   });
+  rawAds = [];
+  for (let r = 2; r <= ws.rowCount; r++) {
+    const row = ws.getRow(r);
+    const obj = {};
+    let hasAny = false;
+    headers.forEach((h, i) => {
+      if (!h) return;
+      const v = row.getCell(i + 1).text ?? "";
+      const s = String(v).trim();
+      if (s) hasAny = true;
+      obj[h] = s;
+    });
+    if (hasAny) rawAds.push(obj);
+  }
 } else {
   const csvText = readFileSync(csvPath, "utf-8");
   const csvRows = parseCSV(csvText);

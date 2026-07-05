@@ -96,7 +96,7 @@ Open a terminal in the project folder and run:
 npm install
 ```
 
-This installs the `xlsx` package (used to generate Excel files for Ads Uploader). Everything else uses Node.js built-in modules.
+This installs the `exceljs` package (used to generate Excel files for Ads Uploader). Everything else uses Node.js built-in modules.
 
 ### Step 3: Install & Authenticate Firecrawl CLI
 
@@ -470,7 +470,7 @@ Static Ads v2/
 │   └── ...
 ├── hook-bank.md                # 100 hook frameworks for ad copywriting
 ├── CLAUDE.md                   # Project instructions for Claude
-├── package.json                # Node dependencies (just xlsx)
+├── package.json                # Node dependencies (just exceljs)
 └── .env.example                # Rename to .env and add your API keys
 ```
 
@@ -535,7 +535,7 @@ node skills/references/gallery-selector.mjs --output-dir brands/mybrand/outputs/
 - The script automatically retries failed requests up to 3 times with 10-second delays
 - If Gemini is persistently failing, switch to the FAL.ai backup script
 
-### "xlsx" module not found
+### "exceljs" module not found
 
 Run `npm install` in the project root.
 

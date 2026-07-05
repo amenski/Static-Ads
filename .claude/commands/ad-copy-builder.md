@@ -208,10 +208,10 @@ Headline: [text] | Description: [text] | CTA: [CTA]
 
 2. **Save `upload-3.csv`** — copy of upload.csv (ad-library.mjs reads upload-3.csv as "funnel" format with both image columns; upload.csv is treated as legacy "dual" format).
 
-3. **Generate `upload-2.xlsx`** — convert upload-3.csv to Excel using the xlsx package:
+3. **Generate `upload-2.xlsx`** — convert upload-3.csv to Excel using the exceljs package:
 ```js
-const XLSX = require('xlsx');
-// Parse CSV → array of arrays → XLSX.utils.aoa_to_sheet → writeFile
+import ExcelJS from 'exceljs';
+// Parse CSV → array of arrays → addWorksheet → addRow per row → await wb.xlsx.writeFile(outPath)
 ```
 
 4. **Generate the Ad Library preview:**
