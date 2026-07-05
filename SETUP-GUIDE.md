@@ -9,15 +9,16 @@ A fully automated pipeline for generating production-ready static ad images and 
 1. [What This Does](#what-this-does)
 2. [Prerequisites](#prerequisites)
 3. [Initial Setup](#initial-setup)
-4. [The 4-Phase Pipeline](#the-4-phase-pipeline)
-5. [Phase 1: Brand Research](#phase-1-brand-research)
-6. [Phase 2: Prompt Generation](#phase-2-prompt-generation)
-7. [Phase 3: Image Generation](#phase-3-image-generation)
-8. [Phase 4: Ad Copy & Upload](#phase-4-ad-copy--upload)
-9. [Command Reference](#command-reference)
-10. [Folder Structure](#folder-structure)
-11. [Troubleshooting](#troubleshooting)
-12. [Cost Estimates](#cost-estimates)
+4. [Using the Webapp (Recommended)](#using-the-webapp-recommended)
+5. [The 4-Phase Pipeline](#the-4-phase-pipeline)
+6. [Phase 1: Brand Research](#phase-1-brand-research)
+7. [Phase 2: Prompt Generation](#phase-2-prompt-generation)
+8. [Phase 3: Image Generation](#phase-3-image-generation)
+9. [Phase 4: Ad Copy & Upload](#phase-4-ad-copy--upload)
+10. [Command Reference](#command-reference)
+11. [Folder Structure](#folder-structure)
+12. [Troubleshooting](#troubleshooting)
+13. [Cost Estimates](#cost-estimates)
 
 ---
 
@@ -43,8 +44,8 @@ This project takes a **brand name + website URL** and automatically:
 | Requirement | Details |
 |---|---|
 | **Claude Code** | Anthropic's CLI tool — this is the AI that orchestrates the entire pipeline. Install from [claude.ai/code](https://claude.ai/code) |
-| **Node.js 18+** | Required for the image generation and gallery scripts. Download from [nodejs.org](https://nodejs.org) |
-| **Firecrawl CLI** | Website scraper used in Phase 1 brand research. Install globally: `npm install -g firecrawl-cli` |
+| **Node.js 18+** | Required for the image generation, webapp server, and scripts. Download from [nodejs.org](https://nodejs.org) |
+| **Firecrawl CLI** | (Optional) Website scraper used in Phase 1 brand research. Install globally: `npm install -g firecrawl-cli` |
 | **VS Code** (recommended) | Claude Code runs inside VS Code as an extension. You can also use the standalone CLI |
 
 ### API Keys
@@ -132,6 +133,39 @@ claude
 ```
 
 Claude Code will automatically read the `CLAUDE.md` file and understand the entire pipeline.
+
+---
+
+## Using the Webapp (Recommended)
+
+The project includes a **local webapp** that provides a browser UI for the pipeline — no CLI commands needed for daily use.
+
+### Start the Server
+
+```bash
+# From the project root
+node webapp/server.mjs
+
+# Custom port
+node webapp/server.mjs --port 3000
+```
+
+Then open http://localhost:3000 in a browser.
+
+### What You Can Do in the Webapp
+
+| Tab | What it does |
+|-----|-------------|
+| **① Brand DNA** | Upload `brand-dna.md` (pasted from Claude Code), drop product/brand images |
+| **② Prompts** | View/edit all prompts, add custom prompts, filter by number/name, load the 50 template library |
+| **③ Generate** | Select templates, set image count & ratios, run generation with live log stream, browse & select images |
+| **④ Copy & Export** | Load selections, generate ad copy (TOF/MOF/BOF per template), export CSV + XLSX |
+
+The webapp is zero-dependency — uses Node's built-in `http` module and vanilla HTML/CSS/JS.
+
+### CLI Still Works
+
+All CLI commands from this guide still work. The webapp is a convenience layer that spawns the same scripts under the hood.
 
 ---
 
@@ -269,9 +303,13 @@ You can review this file and edit any prompts before running image generation.
 Once prompts.json is ready, run the image generation script:
 
 ```bash
+# Default run — all 50 templates, 1 image each, 1x1 only
+# Generates ~50 images (50 templates × 1 image)
+node skills/references/generate_ads_gemini.mjs --brand-dir brands/yourbrand
+
 # Full run — all 50 templates, 4 images each, both aspect ratios
 # Generates ~400 images (50 templates × 4 images × 2 ratios)
-node skills/references/generate_ads_gemini.mjs --brand-dir brands/yourbrand
+node skills/references/generate_ads_gemini.mjs --brand-dir brands/yourbrand --num-images 4 --ratios 1x1,9x16
 
 # Test run — just 3 templates, 1 image each, one ratio (cheap/fast)
 node skills/references/generate_ads_gemini.mjs --brand-dir brands/yourbrand --templates 1,7,13 --num-images 1 --ratios 1x1
@@ -286,11 +324,11 @@ node skills/references/generate_ads_gemini.mjs --brand-dir brands/yourbrand --ma
 ### Script Options
 
 | Flag | Default | Description |
-|---|---|---|
+|---|---|---|---|
 | `--brand-dir` | (required) | Path to the brand folder |
 | `--templates` | all | Comma-separated template numbers to generate (e.g., `1,7,13`) |
-| `--num-images` | 4 | Number of image variations per prompt per ratio |
-| `--ratios` | `1x1,9x16` | Which aspect ratios to generate (`1x1`, `9x16`, or both) |
+| `--num-images` | 1 | Number of image variations per prompt per ratio |
+| `--ratios` | `1x1` | Which aspect ratios to generate (`1x1`, `9x16`, or both) |
 | `--max-concurrent` | 2 | Number of parallel API requests (max recommended: 5) |
 
 ### What the Script Does
@@ -549,7 +587,10 @@ This project does NOT use Python. All scripts are Node.js. If you see Python err
 
 ### Google Gemini (Primary)
 
-Gemini pricing is per-request. A full 50-template run with 4 images each and both aspect ratios = ~400 API calls. Check current Gemini pricing at [ai.google.dev/pricing](https://ai.google.dev/pricing).
+Gemini pricing is per-request. Check current pricing at [ai.google.dev/pricing](https://ai.google.dev/pricing).
+
+- **Default run** (50 templates × 1 image × 1 ratio) = 50 API calls
+- **Full run** (50 templates × 4 images × 2 ratios) = 400 API calls
 
 **Cheap test run** (3 templates, 1 image, 1 ratio = 3 API calls):
 ```bash
@@ -570,7 +611,7 @@ node skills/references/generate_ads_gemini.mjs --brand-dir brands/mybrand --temp
 
 1. **Product images matter** — Higher quality product photos = better generated ads. Use clean PNGs with transparent or white backgrounds when possible.
 
-2. **Review the Brand DNA** — Spend 2 minutes checking the colors and pricing before generating 400 images. Fixing one hex code is cheaper than re-running everything.
+2. **Review the Brand DNA** — Spend 2 minutes checking the colors and pricing before generating images. Fixing one hex code is cheaper than re-running everything.
 
 3. **Start with a test run** — Always run 3 templates first to check quality before committing to the full 50:
    ```bash
