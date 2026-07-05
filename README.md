@@ -39,11 +39,12 @@ Brand Name + URL
 
 ## What You Get
 
-- ~400 AI-generated ad images (50 templates × 4 variations × 2 aspect ratios)
-- Interactive HTML gallery with image selection UI
+- 50–400 AI-generated ad images (50 templates × 1–4 variations × 1–2 aspect ratios)
+- Interactive HTML gallery with image selection UI (or use the webapp)
 - 150 ad copy variants (50 templates × 3 funnel stages: cold / warm / retargeting)
 - Ads Uploader-compatible CSV + Excel file
 - Facebook Ad Library-style preview page
+- **Local webapp** (zero-dependency) for click-driven pipeline control
 
 ---
 
@@ -102,11 +103,20 @@ claude
 
 **Phase 3** (image generation):
 ```bash
-# Full run — 50 templates, 4 images each, both ratios
+# Default run — 50 templates, 1 image, 1x1 only (50 images)
 node skills/references/generate_ads_gemini.mjs --brand-dir brands/mybrand
+
+# Full run — 50 templates, 4 images each, both ratios (400 images)
+node skills/references/generate_ads_gemini.mjs --brand-dir brands/mybrand --num-images 4 --ratios 1x1,9x16
 
 # Test run — 3 templates, 1 image, one ratio (fast & cheap)
 node skills/references/generate_ads_gemini.mjs --brand-dir brands/mybrand --templates 1,7,13 --num-images 1 --ratios 1x1
+```
+
+**Webapp** (recommended for daily use):
+```bash
+# Start the local webapp at http://localhost:3000
+node webapp/server.mjs
 ```
 
 **Phase 4** (in Claude Code, after selecting images in the gallery):
@@ -131,6 +141,9 @@ Static-Ads/
 │   ├── gallery-selector.mjs        # Gallery HTML builder
 │   └── ad-library.mjs              # Ad Library preview builder
 ├── brands/                         # Per-brand workspaces (gitignored)
+├── webapp/                         # Local web interface (zero-dependency)
+│   ├── server.mjs                  #   HTTP server with API + SSE
+│   └── public/                     #   Frontend (vanilla HTML/CSS/JS)
 ├── hook-bank.md                    # 100 hook frameworks for ad copywriting
 ├── CLAUDE.md                       # Project instructions for Claude
 ├── SETUP-GUIDE.md                  # Detailed setup & usage guide
@@ -173,11 +186,11 @@ node skills/references/gallery-selector.mjs --output-dir brands/{name}/outputs/{
 ```
 
 | Flag | Default | Description |
-|---|---|---|
+|---|---|---|---|
 | `--brand-dir` | (required) | Path to the brand folder |
 | `--templates` | all | Comma-separated template numbers (e.g., `1,7,13`) |
-| `--num-images` | 4 | Variations per prompt per ratio |
-| `--ratios` | `1x1,9x16` | Aspect ratios to generate |
+| `--num-images` | 1 | Variations per prompt per ratio |
+| `--ratios` | `1x1` | Aspect ratios to generate |
 | `--max-concurrent` | 2 | Parallel API requests (max recommended: 5) |
 
 ---
