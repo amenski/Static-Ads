@@ -1,3 +1,6 @@
 node_modules/
 .env
 brands/
+.playwright-mcp/
+outreach/
+TODO.md

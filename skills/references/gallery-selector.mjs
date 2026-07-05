@@ -13,12 +13,17 @@
  * Usage:
  *   node skills/references/gallery-selector.mjs --output-dir brands/{name}/outputs/3-16-26-V10
  *   node skills/references/gallery-selector.mjs --output-dir brands/{name}/outputs/3-16-26-V10 --open
+ *
+ * --open / --serve start a local HTTP server and serve gallery.html over
+ * http://localhost — NOT a file:// path. Browsers restrict fetch/downloads on
+ * file:// origins, so the gallery must be served live for reliable behavior.
  */
 
-import { readdirSync, statSync, writeFileSync, existsSync } from "fs";
-import { join, relative, basename, extname } from "path";
+import { readdirSync, statSync, writeFileSync, existsSync, createReadStream } from "fs";
+import { join, relative, resolve, basename, extname } from "path";
 import { parseArgs } from "util";
 import { exec } from "child_process";
+import { createServer } from "http";
 
 const IMAGE_EXTS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif"]);
 const RATIO_FOLDERS = ["1x1", "9x16", "4x5", "16x9"]; // all known ratio folder names
@@ -445,6 +450,68 @@ ${r.images.map((img, idx) => {
 }
 
 // ---------------------------------------------------------------------------
+// Local static server (serves the output dir over http://localhost)
+// ---------------------------------------------------------------------------
+
+const MIME_TYPES = {
+  ".html": "text/html", ".htm": "text/html",
+  ".js": "text/javascript", ".css": "text/css",
+  ".json": "application/json", ".txt": "text/plain; charset=utf-8",
+  ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+  ".webp": "image/webp", ".gif": "image/gif", ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+};
+
+function openInBrowser(url) {
+  const cmd = process.platform === "win32" ? `start "" "${url}"` :
+              process.platform === "darwin" ? `open "${url}"` :
+              `xdg-open "${url}"`;
+  exec(cmd);
+}
+
+function serveGallery(rootDir, preferredPort, openBrowser) {
+  const resolvedRoot = resolve(rootDir);
+  const server = createServer((req, res) => {
+    try {
+      const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
+      const rel = urlPath === "/" ? "gallery.html" : urlPath.replace(/^\/+/, "");
+      const filePath = join(resolvedRoot, rel);
+      // Block path traversal outside the served root.
+      if (!resolve(filePath).startsWith(resolvedRoot)) {
+        res.writeHead(403); res.end("Forbidden"); return;
+      }
+      if (!existsSync(filePath) || statSync(filePath).isDirectory()) {
+        res.writeHead(404); res.end("Not found"); return;
+      }
+      res.writeHead(200, { "Content-Type": MIME_TYPES[extname(filePath).toLowerCase()] || "application/octet-stream" });
+      createReadStream(filePath).pipe(res);
+    } catch {
+      res.writeHead(500); res.end("Server error");
+    }
+  });
+
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(`Port ${preferredPort} is in use — retrying on a random free port...`);
+      server.listen(0);
+    } else {
+      console.error(err);
+    }
+  });
+
+  server.listen(preferredPort, () => {
+    const port = server.address().port;
+    const url = `http://localhost:${port}/gallery.html`;
+    console.log(`\nGallery live at: ${url}`);
+    console.log("Leave this running while you pick images. Press Ctrl+C to stop the server when done.");
+    if (openBrowser) {
+      openInBrowser(url);
+      console.log("Opening in your browser...");
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -453,6 +520,8 @@ async function main() {
     options: {
       "output-dir": { type: "string" },
       "open": { type: "boolean", default: false },
+      "serve": { type: "boolean", default: false },
+      "port": { type: "string" },
     },
     strict: false,
   });
@@ -493,19 +562,17 @@ async function main() {
   writeFileSync(galleryPath, html, "utf-8");
   console.log(`\nGallery saved → ${galleryPath}`);
   console.log("\nInstructions:");
-  console.log("  1. Open gallery.html in your browser");
+  console.log("  1. View the gallery at the http://localhost URL below (served live, not file://)");
   console.log("  2. Click each image to select the best one per group");
   console.log("  3. Click 'Save Selections →' — downloads selections.json");
   console.log("  4. Move selections.json into:", outputDir);
   console.log("  5. Run: /ad-copy-builder --brand {name} --output-dir", outputDir);
 
-  if (values["open"]) {
-    const platform = process.platform;
-    const cmd = platform === "win32" ? `start "" "${galleryPath}"` :
-                platform === "darwin" ? `open "${galleryPath}"` :
-                `xdg-open "${galleryPath}"`;
-    exec(cmd);
-    console.log("\nOpening gallery in browser...");
+  if (values["open"] || values["serve"]) {
+    const port = values["port"] ? Number(values["port"]) : 4321;
+    serveGallery(outputDir, port, !!values["open"]);
+  } else {
+    console.log("\n(Pass --open to serve it live and launch your browser, or --serve to serve without auto-opening.)");
   }
 }
 

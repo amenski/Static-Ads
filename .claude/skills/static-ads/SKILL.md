@@ -13,7 +13,7 @@ Generate 50 production-ready static ad images for any brand — from brand resea
 
 This skill replaces the manual Claude → Higgsfield workflow with a fully automated pipeline:
 
-1. **Phase 1: Brand Research** → Firecrawl downloads brand images + screenshots → Claude visually inspects for accurate colors → builds Brand DNA document
+1. **Phase 1: Brand Research** → Playwright (browser MCP) visits the site, downloads brand images + takes screenshots → Claude visually inspects for accurate colors → builds Brand DNA document
 2. **Phase 2: Prompt Generation** → Claude fills 50 template prompts with brand-specific details → outputs `prompts.json`
 3. **Phase 3: Image Generation** → Node.js script fires prompts to Nano Banana 2 via FAL API → downloads images + builds HTML gallery
 
@@ -83,10 +83,18 @@ brands/{brand-name}/
 
 ### Step 2: Download Brand Images from Website
 
-After creating the folder structure, scrape the brand URL (and product pages) using Firecrawl with `--format images --json` to extract all image URLs from the site.
+After creating the folder structure, visit the brand URL (and product pages) using the Playwright browser MCP tools to extract all image URLs from the site.
 
 **Process:**
-1. Run `firecrawl scrape "<brand_url>" --format images --json` on the homepage and key product/service pages
+1. Navigate to the page with `browser_navigate`, then extract image URLs with `browser_evaluate`, e.g.:
+   ```js
+   () => JSON.stringify({
+     images: Array.from(document.images).map(i => ({ src: i.currentSrc || i.src, alt: i.alt, w: i.naturalWidth, h: i.naturalHeight })),
+     ogImage: document.querySelector('meta[property="og:image"]')?.content,
+     backgrounds: Array.from(document.querySelectorAll('*')).map(el => getComputedStyle(el).backgroundImage).filter(b => b.startsWith('url(')).slice(0, 30)
+   })
+   ```
+   Repeat for the homepage and key product/service pages.
 2. Filter the returned image URLs — keep only brand-relevant images:
    - Product photos, packaging, hero shots
    - Lifestyle/campaign photography
@@ -107,20 +115,10 @@ Save an `image-index.md` file in the `brand-images/` folder listing each downloa
 **This step prevents color/branding mistakes.** Text-only web scraping cannot reliably capture visual brand identity — colors described in CSS may not match the actual rendered brand palette, and logos/product details are invisible to text scrapers. Screenshots solve this.
 
 **Process:**
-1. Take a full-page screenshot of the homepage:
-   ```
-   firecrawl scrape "<brand_url>" --full-page-screenshot --json
-   ```
-2. Parse the JSON output to extract the screenshot URL (it's a Google Cloud Storage PNG URL in the `screenshot` field)
-3. Download the screenshot:
-   ```
-   curl -sL -o "brands/{brand-name}/brand-images/homepage-screenshot.png" "<screenshot_url>"
-   ```
-4. Take additional screenshots of key pages (product page, about page) if they have distinct visual treatments:
-   ```
-   firecrawl scrape "<product_page_url>" --screenshot --json
-   ```
-5. Download the favicon separately:
+1. Navigate to the homepage with `browser_navigate` and wait for it to fully load
+2. Take a full-page screenshot with `browser_take_screenshot` (`fullPage: true`), then copy/move the saved file to `brands/{brand-name}/brand-images/homepage-screenshot.png`
+3. Take additional screenshots of key pages (product page, about page) if they have distinct visual treatments — navigate to each and screenshot the same way
+4. Download the favicon separately:
    ```
    curl -sL -o "brands/{brand-name}/brand-images/favicon.ico" "<brand_url>/favicon.ico"
    ```
@@ -313,7 +311,11 @@ The script will:
 After generation completes, tell the user:
 - How many images were generated across how many templates
 - Where the output folder is located
-- That they can open `gallery.html` in a browser to review all ads
+- That they can review all ads by serving the gallery live (NOT by opening the file directly — browsers restrict `file://`):
+  ```bash
+  node skills/references/gallery-selector.mjs --output-dir brands/{brand-name}/outputs/{version} --open
+  ```
+  This serves `gallery.html` at a `http://localhost` URL and opens it in the browser.
 - Any templates that failed (and offer to retry them)
 
 Ask if they want to:

@@ -153,6 +153,7 @@ async function generateImage(prompt, referenceImageParts) {
 const ASPECT_RATIOS = [
   { ratio: "1:1", folder: "1x1", instruction: "The output image MUST be square (1:1 aspect ratio)." },
   { ratio: "9:16", folder: "9x16", instruction: "The output image MUST be vertical/portrait (9:16 aspect ratio, taller than wide). IMPORTANT for vertical format: Keep the top ~15% and bottom ~25% of the image free of text, logos, and key visual elements — this area gets covered by platform UI (profile icons, captions, CTA buttons) on Meta Stories and Reels placements. Center all critical copy and branding in the middle 60% of the frame vertically." },
+  { ratio: "16:9", folder: "16x9", instruction: "The output image MUST be wide horizontal landscape (16:9 aspect ratio, much wider than tall — like a YouTube banner or Facebook cover photo). The image is roughly 2.6× wider than it is tall. Horizontal panoramic composition only." },
 ];
 
 /**

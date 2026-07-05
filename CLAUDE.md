@@ -20,10 +20,10 @@ Automated static ad generator: Claude Code + Google Gemini (primary) / FAL.ai Na
 
 ## 4-Phase Pipeline
 
-1. **Phase 1 (Brand DNA)**: Firecrawl scrapes brand site + screenshots → Claude visually inspects screenshots (primary color source) → web research → `brand-dna.md` + `brand-images/`
+1. **Phase 1 (Brand DNA)**: Playwright (browser MCP) visits brand site + takes screenshots → Claude visually inspects screenshots (primary color source) → web research → `brand-dna.md` + `brand-images/`
 2. **Phase 2 (Prompts)**: Fill 50 templates from SKILL.md with brand details → `prompts.json`
 3. **Phase 3 (Images)**: `node generate_ads_gemini.mjs` → Gemini API → `outputs/{date}-V{n}/` + `gallery.html` (with image selection UI)
-4. **Phase 4 (Ad Copy)**: Open `gallery.html` → pick best image per group → Save Selections → drop `selections.json` in output folder → `create copy for [brand] [version]` → `upload.csv` + `upload-2.xlsx` + `copy-summary.md` → upload to Ads Uploader → publish paused
+4. **Phase 4 (Ad Copy)**: Serve `gallery.html` live (`gallery-selector.mjs --open`, http://localhost) → pick best image per group → Save Selections → drop `selections.json` in output folder → `create copy for [brand] [version]` → `upload.csv` + `upload-2.xlsx` + `copy-summary.md` → upload to Ads Uploader → publish paused
 
 ## Commands
 
@@ -93,6 +93,8 @@ If `gallery.html` is missing or empty for an existing output folder, rebuild it:
 node skills/references/gallery-selector.mjs --output-dir brands/{name}/outputs/{version} --open
 ```
 
+`--open` serves the gallery live over `http://localhost:{port}` (default 4321) and opens it in the browser — the gallery is served by a local Node HTTP server, NOT opened as a `file://` path (browsers restrict fetch/downloads on `file://`, which breaks image loading and the Save Selections download). Variants: `--serve` serves without auto-opening the browser; `--port N` sets the port. The server stays running until you Ctrl+C.
+
 ## Ad Copy Commands
 
 ```bash
@@ -136,5 +138,5 @@ Also: `rebuild-upload-csv.mjs` expects the old dual-row CSV format — do NOT us
 ## Brand Research Rules
 
 - **Screenshots are the primary source of truth** for brand colors and visual identity. Text-scraped CSS is secondary. If screenshots and CSS disagree, trust the screenshots.
-- Use Firecrawl for site scraping and screenshots
+- Use Playwright (browser MCP tools) for site scraping and screenshots — Firecrawl is no longer used
 - Always visually inspect downloaded screenshots with Claude's multimodal capability before writing brand-dna.md

@@ -55,7 +55,7 @@ Brand Name + URL
 | **Claude Code** | Orchestrates the pipeline — brand research, prompt generation, ad copy |
 | **Google Gemini** | Primary image generation API (accepts reference product images) |
 | **FAL.ai Nano Banana 2** | Backup image generator |
-| **Firecrawl** | Website scraping + screenshots for brand research |
+| **Playwright MCP** | Website scraping + screenshots for brand research |
 | **Node.js** | Generation scripts, gallery builder, file I/O |
 | **VS Code** | IDE with Claude Code extension |
 
@@ -67,7 +67,7 @@ Brand Name + URL
 
 - [Claude Code](https://claude.ai/code) (CLI or VS Code extension)
 - [Node.js 18+](https://nodejs.org)
-- [Firecrawl CLI](https://docs.firecrawl.dev/cli) (required for brand research — scrapes websites + takes screenshots)
+- [Playwright MCP](https://github.com/microsoft/playwright-mcp) (required for brand research — scrapes websites + takes screenshots)
 - [Google Gemini API key](https://aistudio.google.com) (required)
 - [FAL.ai API key](https://fal.ai) (optional backup)
 
@@ -81,10 +81,9 @@ cd Static-Ads
 # 2. Install dependencies
 npm install
 
-# 3. Install Firecrawl CLI (used for brand research / site scraping)
-npm install -g firecrawl-cli
-firecrawl auth          # paste your Firecrawl API key when prompted
-# Free tier works to get started — paid plan recommended for heavy use
+# 3. Add the Playwright MCP server (used for brand research / site scraping)
+claude mcp add playwright -- npx @playwright/mcp@latest
+# No API key needed — runs a local browser
 
 # 4. Add your API keys
 cp .env.example .env

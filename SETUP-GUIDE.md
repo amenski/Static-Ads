@@ -45,20 +45,17 @@ This project takes a **brand name + website URL** and automatically:
 |---|---|
 | **Claude Code** | Anthropic's CLI tool — this is the AI that orchestrates the entire pipeline. Install from [claude.ai/code](https://claude.ai/code) |
 | **Node.js 18+** | Required for the image generation, webapp server, and scripts. Download from [nodejs.org](https://nodejs.org) |
-| **Firecrawl CLI** | (Optional) Website scraper used in Phase 1 brand research. Install globally: `npm install -g firecrawl-cli` |
+| **Playwright MCP** | Browser automation server used in Phase 1 brand research (scraping + screenshots). Add to Claude Code: `claude mcp add playwright -- npx @playwright/mcp@latest` |
 | **VS Code** (recommended) | Claude Code runs inside VS Code as an extension. You can also use the standalone CLI |
 
 ### API Keys
 
-You need **two** API keys to run the full pipeline:
+You need **one** API key to run the full pipeline (plus an optional backup):
 
 | Service | What It Does | How to Get It |
 |---|---|---|
-| **Firecrawl API** (required) | Scrapes brand websites + takes full-page screenshots in Phase 1 | [firecrawl.dev](https://firecrawl.dev) — sign up for a free account, get your API key from the dashboard |
 | **Google Gemini API** (required) | Generates ad images from text prompts | [aistudio.google.com](https://aistudio.google.com) — create a project, enable the Generative Language API, create an API key |
 | **FAL.ai API** (optional backup) | Backup image generator if Gemini is down | [fal.ai](https://fal.ai) — sign up, add credits, get API key from dashboard |
-
-> **Firecrawl free tier** is enough to get started and test the pipeline. If this becomes your daily driver, you'll want a paid plan for higher rate limits — or integrate another scraping service.
 
 ---
 
@@ -99,17 +96,15 @@ npm install
 
 This installs the `exceljs` package (used to generate Excel files for Ads Uploader). Everything else uses Node.js built-in modules.
 
-### Step 3: Install & Authenticate Firecrawl CLI
+### Step 3: Add the Playwright MCP Server
 
-Firecrawl is used in Phase 1 to scrape brand websites and take full-page screenshots. Install it globally and authenticate:
+Playwright is used in Phase 1 to scrape brand websites and take full-page screenshots. Add it to Claude Code:
 
 ```bash
-npm install -g firecrawl-cli
-firecrawl auth
-# Paste your Firecrawl API key when prompted
+claude mcp add playwright -- npx @playwright/mcp@latest
 ```
 
-Get your API key at [firecrawl.dev](https://firecrawl.dev) — the free account is enough to get started. If this becomes your daily driver, you'll want a paid plan for higher rate limits or to integrate another scraping service.
+No API key needed — it drives a local browser. In VS Code, the Playwright MCP plugin works too.
 
 ### Step 4: Add Your API Keys
 

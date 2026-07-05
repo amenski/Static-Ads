@@ -29,7 +29,9 @@ If `selections.json` is missing, stop and run:
 ```bash
 node skills/references/gallery-selector.mjs --output-dir brands/{brand}/outputs/{version} --open
 ```
-Then: open gallery.html → pick best image per group → Save Selections → copy `selections.json` into the output folder.
+`--open` starts a local HTTP server and serves the gallery at a `http://localhost:{port}` URL (default port 4321), then opens it in the browser — it is served live, NOT opened as a `file://` path (browsers restrict fetch/downloads on `file://`). The server keeps running; leave it up while selecting and press Ctrl+C when done. Use `--serve` to serve without auto-opening, or `--port N` to pick the port.
+
+Then, in the browser: pick best image per group → Save Selections → copy the downloaded `selections.json` into the output folder.
 
 ---
 
