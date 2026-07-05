@@ -1,0 +1,7 @@
+{
+  "name": "static-ads-webapp",
+  "version": "1.0.0",
+  "description": "Local web interface for the Static Ads pipeline",
+  "type": "module",
+  "private": true
+}
