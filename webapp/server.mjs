@@ -802,7 +802,7 @@ async function main() {
   server.listen(PORT, "127.0.0.1", () => {
     console.log(`\n  ╔══════════════════════════════════════════╗`);
     console.log(`  ║  Static Ads Webapp                       ║`);
-    console.log(`  ║  http://localhost:${port}                  ║`);
+    console.log(`  ║  http://localhost:${PORT}                  ║`);
     console.log(`  ╚══════════════════════════════════════════╝\n`);
   });
 }
