@@ -19,8 +19,8 @@
  * file:// origins, so the gallery must be served live for reliable behavior.
  */
 
-import { readdirSync, statSync, writeFileSync, existsSync, createReadStream } from "fs";
-import { join, relative, resolve, basename, extname } from "path";
+import { readdirSync, statSync, writeFileSync, existsSync, createReadStream, realpathSync } from "fs";
+import { join, relative, resolve, basename, extname, sep } from "path";
 import { parseArgs } from "util";
 import { exec } from "child_process";
 import { createServer } from "http";
@@ -471,13 +471,16 @@ function openInBrowser(url) {
 
 function serveGallery(rootDir, preferredPort, openBrowser) {
   const resolvedRoot = resolve(rootDir);
+  const realRoot = realpathSync(resolvedRoot);
   const server = createServer((req, res) => {
     try {
       const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
       const rel = urlPath === "/" ? "gallery.html" : urlPath.replace(/^\/+/, "");
       const filePath = join(resolvedRoot, rel);
-      // Block path traversal outside the served root.
-      if (!resolve(filePath).startsWith(resolvedRoot)) {
+      // Block path traversal: resolve symlinks before comparing.
+      let realFile;
+      try { realFile = realpathSync(filePath); } catch { res.writeHead(404); res.end("Not found"); return; }
+      if (realFile !== realRoot && !realFile.startsWith(realRoot + sep)) {
         res.writeHead(403); res.end("Forbidden"); return;
       }
       if (!existsSync(filePath) || statSync(filePath).isDirectory()) {

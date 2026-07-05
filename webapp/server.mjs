@@ -64,6 +64,8 @@ const MIME_TYPES = {
 
 const IMAGE_EXTS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif"]);
 
+let PORT = 3000; // set by main() before first request
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -554,10 +556,18 @@ function streamGeneration(req, res, brandName, options) {
 // ---------------------------------------------------------------------------
 
 async function handleRequest(req, res) {
-  // CORS for local dev
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  // Restrict CORS to our own origin; reject cross-origin state-changing requests.
+  const origin = req.headers["origin"];
+  const allowedOrigin = `http://localhost:${PORT}`;
+  if (origin) res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+  res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept");
+
+  // Reject cross-origin requests for state-changing methods.
+  if (origin && origin !== allowedOrigin && req.method !== "GET" && req.method !== "OPTIONS") {
+    res.writeHead(403); res.end("Forbidden"); return;
+  }
 
   if (req.method === "OPTIONS") {
     res.writeHead(204);
@@ -617,11 +627,15 @@ async function handleRequest(req, res) {
       const type = body.type || "product"; // "product" or "brand"
       const targetDir = join(dir, type === "brand" ? "brand-images" : "product-images");
       mkdirSync(targetDir, { recursive: true });
-      const filename = body.filename;
-      if (!filename) return jsonError(res, "filename required");
+      const safeFilename = basename(String(body.filename || ""));
+      if (!safeFilename || safeFilename.startsWith(".") || !IMAGE_EXTS.has(extname(safeFilename).toLowerCase())) {
+        return jsonError(res, "invalid filename");
+      }
+      const destPath = resolve(join(targetDir, safeFilename));
+      if (!destPath.startsWith(resolve(targetDir) + "/")) return jsonError(res, "invalid path");
       const buffer = base64ToBuffer(body.data);
-      writeFileSync(join(targetDir, filename), buffer);
-      return json(res, { ok: true, filename });
+      writeFileSync(destPath, buffer);
+      return json(res, { ok: true, filename: safeFilename });
     }
 
     // DELETE /api/brands/:name/upload-image
@@ -631,7 +645,10 @@ async function handleRequest(req, res) {
       if (!existsSync(dir)) return jsonError(res, "Brand not found", 404);
       const type = body.type || "product";
       const targetDir = join(dir, type === "brand" ? "brand-images" : "product-images");
-      const filepath = join(targetDir, body.filename);
+      const safeFilename = basename(String(body.filename || ""));
+      if (!safeFilename || safeFilename.startsWith(".")) return jsonError(res, "invalid filename");
+      const filepath = resolve(join(targetDir, safeFilename));
+      if (!filepath.startsWith(resolve(targetDir) + "/")) return jsonError(res, "invalid path");
       if (existsSync(filepath)) unlinkSync(filepath);
       return json(res, { ok: true });
     }
@@ -779,10 +796,10 @@ async function main() {
     },
   });
 
-  const port = parseInt(values.port, 10) || 3000;
+  PORT = parseInt(values.port, 10) || 3000;
 
   const server = createServer(handleRequest);
-  server.listen(port, () => {
+  server.listen(PORT, "127.0.0.1", () => {
     console.log(`\n  ╔══════════════════════════════════════════╗`);
     console.log(`  ║  Static Ads Webapp                       ║`);
     console.log(`  ║  http://localhost:${port}                  ║`);
